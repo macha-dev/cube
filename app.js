@@ -8,22 +8,17 @@ app.get("/", (req, res) => {
     res.sendFile(__dirname + "/index.html");
 });
 
+//connected socket array
+var socketArray = [];
+
 io.on("connection", (socket) => {
     console.log(`user ${socket.id} connected`);
 
-
-    //array of connected sockets
-    var socketArray = [];
-
-    for (x in io.sockets.sockets)
-    {
-        if (x != socket.id)
-        socketArray.push(x);
-    };
-
-
     //sends list of connected sockets to newly connected socket
-    io.sockets.connected[socket.id].emit("loadCubes", socketArray);
+    io.to(socket.id).emit("loadCubes", socketArray);
+
+    //adds connecting socket to array
+    socketArray.push(socket.id);
 
     //asking sockets to send their current locations when a new socket joins
     socket.broadcast.emit("posReq");
@@ -39,6 +34,8 @@ io.on("connection", (socket) => {
     socket.on("disconnect", (reason) => {
         console.log(`user ${socket.id} disconnected (reason: ${reason})`);
         socket.broadcast.emit("cubeDisconnect", socket.id);
+        var arrayindex = socketArray.indexOf(socket.id);
+        socketArray.splice(arrayindex, 1);
     });
 
 });
