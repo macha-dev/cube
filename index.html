@@ -36,6 +36,7 @@
         const cubeMaterial = new THREE.MeshPhongMaterial({color: 0x00ff00, wireframe:false});
         var socket = io();
         var cubeDict = {};
+        var socketid;
 
         init();
         animate();
@@ -87,7 +88,7 @@
             cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             scene.add(cube);
             cube.material.color.setHex(randomColor);
-            socket.emit("newCubeColor", randomColor);
+            socket.emit("sendColour", randomColor);
             
         }
 
@@ -102,25 +103,25 @@
         {
             keyboard.update();
 
-            if (keyboard.down("left"))
+            if (keyboard.down("left") || keyboard.down("A"))
             {
                 cube.translateX(-1);
                 socket.emit("updateServer", cube.position);
             }
 
-            if (keyboard.down("right"))
+            if (keyboard.down("right") || keyboard.down("D"))
             {
                 cube.translateX(1);
                 socket.emit("updateServer", cube.position);
             }
 
-            if (keyboard.down("up"))
+            if (keyboard.down("up") || keyboard.down("W"))
             {
                 cube.translateZ(-1);
                 socket.emit("updateServer", cube.position);
             }
 
-            if (keyboard.down("down"))
+            if (keyboard.down("down") || keyboard.down("S"))
             {
                 cube.translateZ(1);
                 socket.emit("updateServer", cube.position);
@@ -131,6 +132,17 @@
                 var randomColor = '0x'+Math.floor(Math.random()*16777215).toString(16);
                 setColor(randomColor);
             }
+
+            if (keyboard.down("R"))
+            {
+                cube.position.set(0,0,0);
+                socket.emit("updateServer", cube.position);
+            }
+
+            //if (keyboard.down("enter"))
+            //{
+            //    window.open("http://wimble.eu");
+            //}
             
             controls.update();
 
@@ -159,20 +171,13 @@
         };
 
         //EVENTS
-        socket.on("onConnect", (id) => {
+        //logs ID of this socket to console
+        socket.on("sendID", (id) => {
             console.log(`Connected to server with socketid ${id}`);
+            socketid = id;
         });
 
-        socket.on("newCube", (id, color) => {
-            newCube(id, color);
-        });
-
-        socket.on("cubeDisconnect", (id) => {
-            //console.log("dc signal get");
-            scene.remove(cubeDict[id]);
-            delete cubeDict[id];
-        });
-    
+        //creates cube object for each cube in socketObj
         socket.on("loadCubes", (socketObj) => {
             for (var i in socketObj)
             {
@@ -180,22 +185,33 @@
             };
         });
 
+        //when a new socket connects a new cube is created
+        socket.on("newCube", (id, color) => {
+            newCube(id, color);
+        });
+
+        //updates cube dictionary with new positions
         socket.on("updateSockets", (id, position) => {
             cubeDict[id].position.x = position.x;
             cubeDict[id].position.y = position.y;
             cubeDict[id].position.z = position.z;
             
         });
-
+        
         socket.on("posReq", () =>{
             socket.emit("updateServer", cube.position);
         });
-
+        
         socket.on("colourChangeTOCLIENT", (id, color) => {
             cubeDict[id].material.color.setHex(color);
         });
-    
-    
+        
+        //removes cube from scene and dictionary when socket disconnects
+        socket.on("cubeDisconnect", (id) => {
+            scene.remove(cubeDict[id]);
+            delete cubeDict[id];
+        });
+        
         </script>
 
     </body>

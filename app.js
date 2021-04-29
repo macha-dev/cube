@@ -9,19 +9,20 @@ app.get("/", (req, res) => {
 });
 
 //connected socket array
+//format is for each index is (socketid, "hexcolour")
 var socketObj = {};
 
 io.on("connection", (socket) => {
-    console.log(`user ${socket.id} connected`);
+    console.log(`user ${socket.id} connected from ${socket.handshake.address}`);
     
     //sends socketid to client
-    io.to(socket.id).emit("onConnect", socket.id);
+    io.to(socket.id).emit("sendID", socket.id);
 
     //sends list of connected sockets to newly connected socket
     io.to(socket.id).emit("loadCubes", socketObj);
 
     //adds connecting socket to array
-    socket.on("newCubeColor", (color) => {
+    socket.on("sendColour", (color) => {
         socketObj[socket.id] = color;
         //signals new socket to connected sockets
         socket.broadcast.emit("newCube", socket.id, color);
