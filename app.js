@@ -13,7 +13,7 @@ app.get("/", (req, res) => {
 var socketObj = {};
 
 io.on("connection", (socket) => {
-    console.log(`user ${socket.id} connected from ${socket.handshake.address}`);
+    console.log(`user ${socket.id} connected from ${socket.handshake.address} at ${new Date().toISOString())}`);
     
     //sends socketid to client
     io.to(socket.id).emit("sendID", socket.id);
@@ -42,7 +42,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", (reason) => {
-        console.log(`user ${socket.id} disconnected (reason: ${reason})`);
+        console.log(`user ${socket.id} disconnected (reason: ${reason}) at ${new Date().toISOString())}`);
         socket.broadcast.emit("cubeDisconnect", socket.id);
         delete socketObj[socket.id];
     });
