@@ -51,5 +51,6 @@ io.on("connection", (socket) => {
 
 server.listen(80, () => {
     console.log("listening on *:80");
+    console.log(`started listening at ${new Date().toISOString()}`);
 });
 
